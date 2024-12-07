@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+    <div class="background">
+        <form id="loginForm">
+            <h1>Login</h1>
+            <div class="input-box">
+                <input type="text" placeholder="username" id="username">
+            </div>
+            <div class="input-box">
+                <input type="password" placeholder="Password" id="Password">
+                <i class="fa fa-eye" id="togglePassword" style="cursor: pointer; position: absolute; margin-left: -30px; margin-top: 10px;"></i>
+            </div>
+            <div class="remember">
+                <label><input type="checkbox" id="rememberMe"> Remember me?</label>
+            </div>
+            <div class="login-sub">
+                <button type="button" onclick="loginornot()">Login</button>
+            </div>
+            <div class="dont-account">
+                <p>Don't have an account? <a href="/register.html">Register</a></p>
+            </div>
+        </form>
+    </div>
+</body>
+
+<script>
+    // Initialize page with remembered username/password if available
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedUsername = localStorage.getItem("savedUsername");
+        const savedPassword = localStorage.getItem("savedPassword");
+
+        if (savedUsername && savedPassword) {
+            document.getElementById("username").value = savedUsername;
+            document.getElementById("Password").value = savedPassword;
+            document.getElementById("rememberMe").checked = true;
+        }
+    });
+
+    // Handle login functionality
+    async function loginornot() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("Password").value;
+        const rememberMe = document.getElementById("rememberMe").checked;
+
+        if (!username || !password) {
+            alert("Please enter both username and password.");
+            return;
+        }
+
+        if (rememberMe) {
+            localStorage.setItem("savedUsername", username);
+            localStorage.setItem("savedPassword", password);
+        } else {
+            localStorage.removeItem("savedUsername");
+            localStorage.removeItem("savedPassword");
+        }
+
+        // Send a POST request to the backend
+        const data = { username, password };
+
+        try {
+            const response = await fetch("http://localhost:3001/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                console.log("Server Response:", result);
+                window.location.href = "index.html";
+            } else {
+                alert("Login failed: " + result.message);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Error communicating with the server.");
+        }
+    }
+
+    // Handle Enter key navigation
+    document.getElementById("loginForm").addEventListener("keydown", (event) => {
+        const formElements = ["username", "Password"];
+        const currentIndex = formElements.indexOf(event.target.id);
+
+        if (event.key === "Enter") {
+            event.preventDefault();
+            if (currentIndex >= 0 && currentIndex < formElements.length - 1) {
+                document.getElementById(formElements[currentIndex + 1]).focus();
+            } else if (currentIndex === formElements.length - 1) {
+                loginornot();
+            }
+        }
+    });
+
+    // Toggle password visibility
+    document.getElementById("togglePassword").addEventListener("click", () => {
+        const passwordField = document.getElementById("Password");
+        const toggleIcon = document.getElementById("togglePassword");
+
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            toggleIcon.classList.remove("fa-eye");
+            toggleIcon.classList.add("fa-eye-slash");
+        } else {
+            passwordField.type = "password";
+            toggleIcon.classList.remove("fa-eye-slash");
+            toggleIcon.classList.add("fa-eye");
+        }
+    });
+</script>
+
+</html>

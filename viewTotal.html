@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Person Selection and Total Amount</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    select, button {
+      padding: 10px;
+      font-size: 16px;
+    }
+    #totalAmount {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Select a Person to View Their Total Amount</h1>
+
+  <!-- Dropdown for selecting a person -->
+  <label for="personSelect">Choose a person:</label>
+  <select id="personSelect">
+    <option value="">Select a person</option>
+  </select>
+ 
+
+  <button onclick="getTotalAmount()">Get Total Amount</button>
+
+  <h2 id="totalAmount"></h2>
+  <a href="/index.html">back</a>
+
+  <script>
+    // Fetch all persons from the backend and populate the dropdown
+    async function loadPersons() {
+      try {
+        const response = await fetch('http://localhost:3001/data');
+        const persons = await response.json();
+
+        // Populate the select dropdown with persons
+        const personSelect = document.getElementById('personSelect');
+        persons.forEach(person => {
+          const option = document.createElement('option');
+          option.value = person;
+          option.textContent = person;
+          personSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error loading persons:', error);
+      }
+    }
+
+    // Fetch total amount for the selected person
+    async function getTotalAmount() {
+      const personSelect = document.getElementById('personSelect');
+      const person = personSelect.value;
+      const totalAmountElement = document.getElementById('totalAmount');
+
+      if (person) {
+        try {
+          const response = await fetch(`http://localhost:3001/total/${person}`);
+          const data = await response.json();
+
+          totalAmountElement.textContent = `Total amount for ${data.person}: ₹${data.totalAmount}`;
+        } catch (error) {
+          totalAmountElement.textContent = 'Error calculating total amount.';
+          console.error('Error fetching total amount:', error);
+        }
+      } else {
+        totalAmountElement.textContent = 'Please select a person.';
+      }
+    }
+
+    // Load persons when the page is loaded
+    window.onload = loadPersons;
+  </script>
+</body>
+</html>
